@@ -1,0 +1,25 @@
+﻿@{
+    var products = ViewBag.products;
+}
+<table class="table">
+    <thead>
+        <th>Id</th>
+        <th>Name</th>
+        <th>Price</th>
+        <th>Thumbnail</th>
+        <th></th>
+    </thead>
+    <tbody>
+        @foreach( var p in products)
+        {
+            <tr>
+                <td>@p.Id</td>
+                <td>@p.Name</td>
+                <td>@p.Price</td>
+                <td>@p.Thumbnail</td>
+                <td><a href="~/Product/Edit/@p.Id">Edit</a></td>
+            </tr>
+        }
+        
+    </tbody>
+</table>

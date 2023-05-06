@@ -1,0 +1,23 @@
+﻿@model ASPNETCORE.Entities.Product
+@{
+
+}
+<h1>Edit Product @Model.Name</h1>
+<form action="~/Product/Edit" method="post">
+    <input type="hidden" name="Id" value="@Model.Id"/>
+    <div class="form-group">
+        <label>Name</label>
+        <input class="form-control" type="text" name="Name" value="@Model.Name"/>
+    </div>
+    <div class="form-group">
+        <label>Price</label>
+        <input class="form-control" type="number" name="Price" value="@Model.Price"/>
+    </div>
+    <div class="form-group">
+        <label>Thumbnail</label>
+        <input class="form-control" type="text" name="Thumbnail" value="@Model.Thumbnail"/>
+    </div>
+    <div class="form-group">
+        <button type="submit" class="btn btn-primary">Submit</button>
+    </div>
+</form>
