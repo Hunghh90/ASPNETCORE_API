@@ -1,24 +1,27 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using System;
+using System.Collections.Generic;
 
-namespace ASPNETCOREAPI.Entities
+namespace ASPNETCOREAPI.Entities;
+
+public partial class Product
 {
-    [Table("products")]
-    public class Product
-    {
+    public int Id { get; set; }
 
-        [Key]
-        public int id { get; set; }
+    public string Name { get; set; } = null!;
 
-        [Required]
-        [StringLength(200)]
-        public string name { get; set; }
+    public decimal Price { get; set; }
 
-        [Required]
-        public double price { get; set; }
+    public string? Thumbnail { get; set; }
 
-        [StringLength(150)]
-        public string thumbnail { get; set; }
-    }
+    public int Qty { get; set; }
+
+    public int CategoryId { get; set; }
+
+    public int? BrandId { get; set; }
+
+    public virtual Brand? Brand { get; set; }
+
+    public virtual ICollection<Cart>? Carts { get; set; }
+
+    public virtual Category? Category { get; set; }
 }
-
