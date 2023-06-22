@@ -6,6 +6,14 @@ using System.Security.Cryptography;
 using ASPNETCOREAPI.Dtos;
 using BCrypt.Net;
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Text;
+using System.Security.Claims;
+using Newtonsoft.Json.Linq;
+using System.Globalization;
+
 
 namespace ASPNETCOREAPI.Controllers
 {
@@ -14,26 +22,29 @@ namespace ASPNETCOREAPI.Controllers
     public class AuthController : ControllerBase
     {
         private readonly AspnetcoreApiContext _context;
-        public AuthController(AspnetcoreApiContext context)
+        private readonly IConfiguration _config;
+        public AuthController(AspnetcoreApiContext context, IConfiguration config)
         {
             _context = context;
+            _config = config;
         }
 
         [HttpPost]
-        [Route("/register")]
+        [Route("register")]
         public  IActionResult Register (UserRegister user)
         {
             var hashed = BCrypt.Net.BCrypt.HashPassword(user.Password);
-            _context.Users.Add(new Entities.User { Email= user.Email, Name= user.Name, Password= hashed});
+            var u = new Entities.User { Email = user.Email, Name = user.Name, Password = hashed };
+            _context.Users.Add(u);
             _context.SaveChanges();
-            return Ok(new UserData { Name = user.Name, Email = user.Email });
+            return Ok(new UserData { Name = user.Name, Email = user.Email, Token = GenerateJWT(u) });
         }
 
         [HttpPost]
-        [Route("/login")]
+        [Route("login")]
         public IActionResult Login(UserLogin userLogin)
         {
-            var user = _context.Users.Where(user => user.Email == userLogin.Email).First();
+            var user = _context.Users.Where(user => user.Email.Equals(userLogin.Email)).First();
             if (user == null)
             {
                 return NotFound("User not exist");
@@ -43,12 +54,13 @@ namespace ASPNETCOREAPI.Controllers
             {
                 return NotFound("User not exist");
             }
-            return Ok();
+            var token = GenerateJWT(user);
+            return Ok(new UserLogin { Token= token });
 
 
         }
         [HttpPut]
-        [Route("/changerPassword")]
+        [Route("changerPassword")]
         public  IActionResult ChangerPassword (UserChangerPassword userChangerPassword)
         {
             var user = _context.Users.Where(user => user.Email == userChangerPassword.Email).First();
@@ -66,6 +78,44 @@ namespace ASPNETCOREAPI.Controllers
             user.Password = hashed;
             _context.SaveChanges();
             return Ok();
+        }
+        private String GenerateJWT(User user)
+        {
+            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["JWT:Key"]));
+            var signatureKey = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
+            var claims = new[]
+            {
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new Claim(ClaimTypes.Name, user.Name),
+                new Claim(ClaimTypes.Email, user.Email),
+                new Claim(ClaimTypes.Role, "Admin"),
+            };
+            var token = new JwtSecurityToken(
+                _config["JWT:Issuer"],
+                _config["JWT:Audience"],
+                claims,
+                expires: DateTime.Now.AddHours(2),
+                signingCredentials: signatureKey
+                );
+            return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+        [HttpGet]
+        [Route("profile")]
+        public  IActionResult  Profile()
+        {
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+            if(identity != null)
+            {
+                var userClaims = identity.Claims;
+                var user = new UserData
+                {
+                    Id = Convert.ToInt32(userClaims.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier)?.Value),
+                    Name = userClaims.FirstOrDefault(x => x.Type == ClaimTypes.Name)?.Value,
+                    Email = userClaims.FirstOrDefault(x => x.Type == ClaimTypes.Email)?.Value,
+                };
+                return Ok(user);
+            }
+            return Unauthorized();
         }
     }
 }

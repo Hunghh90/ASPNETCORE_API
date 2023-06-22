@@ -6,6 +6,7 @@ namespace ASPNETCOREAPI.Entities;
 
 public partial class AspnetcoreApiContext : DbContext
 {
+    public static String connectionString;
     public AspnetcoreApiContext()
     {
     }
@@ -27,7 +28,7 @@ public partial class AspnetcoreApiContext : DbContext
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see http://go.microsoft.com/fwlink/?LinkId=723263.
-        => optionsBuilder.UseSqlServer("Data Source=.\\SQLEXPRESS; Initial Catalog=ASPNETCORE_API; Integrated Security=True; TrustServerCertificate=true");
+        => optionsBuilder.UseSqlServer(connectionString);
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

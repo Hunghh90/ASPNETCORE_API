@@ -1,4 +1,5 @@
 ﻿using ASPNETCOREAPI.Entities;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -6,6 +7,7 @@ namespace ASPNETCOREAPI.Controllers
 {
     [ApiController]
     [Route("api/categories")]
+    [Authorize(Policy = "CheckYear")]
     public class CategoriesController : ControllerBase
     {
         private readonly AspnetcoreApiContext _context;
@@ -15,7 +17,9 @@ namespace ASPNETCOREAPI.Controllers
         }
 
         [HttpGet]
+        [AllowAnonymous]
         public ActionResult Index()
+       
         {
             var category = _context.Categories.ToList<Category>();
             return Ok(category);
